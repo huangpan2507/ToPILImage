@@ -1,0 +1,57 @@
+from torchvision.datasets import ImageFolder
+import torch
+import numpy as np
+import torchvision.transforms as transforms
+from torchvision.utils import save_image
+from PIL import Image
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+
+transform = transforms.Compose([
+    transforms.RandomSizedCrop(224),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.4, 0.4, 0.4], std=[0.2, 0.2, 0.2]),
+
+])
+
+
+# 下面的class_to_idx是将文件夹名字命名为对应的 0,1....等
+dataset = ImageFolder('./data/dogcat_2/', transform=transform)
+idx = dataset.class_to_idx
+print('idx', idx)
+for image in dataset.imgs:    # dataset.imgs ：包含所有图片的路径和对应的label
+    print(image)
+
+
+
+# imgs (list): List of (image path, class_index)tuples
+# 第一维是第几张图，第二位为1返回label，为0返回图片数据(<PIL.Image.Image image mode=RGB size=658x411 at 0x2945080>)
+
+print(dataset[0][1])    # [][1]返回label
+dataset[0][0].size()    # 深度学习中图片一般保存成C*H*W
+# dataset[0][0].show()    # [][0]返回图片 添加数据预处理函数后，此时为Tensor
+
+
+''' 将Numpy的ndarray或者Tensor转化成PILImage类型【在数据类型上，两者都有明确的要求】
+ ndarray的数据类型要求dtype=uint8, range[0, 255] and shape H x W x C
+ Tensor 的shape为 C x H x W 要求是FloadTensor的，不允许DoubleTensor或者其他类型 '''
+# 所以，transforms.ToPILImage()(里面不加dataset[0][0]*0.2 + 0.4)则to_img只是ToPILImage，还未转化
+# 或者transforms.ToPILImage()(dataset[0][0].float()) 要得满足转化的数据类型条件，但此时的图片是乱的
+
+to_img = transforms.ToPILImage()(dataset[0][0]*0.2 + 0.4)
+# 0.2和0.4是标准差和均值的近似
+print(isinstance(to_img, Image.Image))    # true
+print(isinstance(to_img, np.ndarray))
+
+to_img.show()
+''' to_img.show()不行，该怎么显示该图像了？transforms.ToPILImage()(dataset[0][0].float())'''
+
+
+
+
+''' 报错，显示Image' object is not iterable
+for image in dataset[i][0]:
+    image.show()
+'''
